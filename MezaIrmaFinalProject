@@ -1,0 +1,158 @@
+'''
+Author: Irma Meza
+Date written: 12/13/2024
+Assignment: Final Project
+Purpose: This GUI program allows a user to enter movies they have watched and allows them to see their movie list along with the genres, their ratings, and their reviews. 
+'''
+
+from tkinter import *
+from PIL import Image, ImageTk
+from tkinter import messagebox
+root = Tk()
+root.geometry("425x500") # Alters window size
+root.title("Juna Movie Tracker") # Title bar name
+root.configure(bg="dark red") # Adds background color 
+
+
+# Window class contains first window 
+class Window:
+    def __init__(self, master):
+        self.master = master
+        self.movieList = [] #Initialized list to hold movie dictionary that holds movie entry data
+        movieOptions = ["Action", "Animation", "Biography", "Comedy", "Crime", "Documentary", "Drama", "Family", "Fantasy", "Horror", "Musical", "Mystery", "Romance", "Sci-fi", "Thriller", "War",  "Western"
+        ]
+
+        # Movie label and entry box
+        self.movieLabel = Label(master, text="Title", bg="dark red", font=("Helvetica", 15, "bold")) # Movie label, entry, packing
+        self.movieEntry = Entry(master, font=("Helvetica, 10"))
+        self.movieLabel.pack(pady=5)
+        self.movieEntry.pack()
+        
+        self.genreLabel = Label(master, text="Genre", bg="dark red", font=("Helvetica", 15, "bold")) # Genre label and packing
+        self.genreLabel.pack(pady=5)
+        self.clicked = StringVar() #initializes genre click 
+        self.clicked.set("Action")
+        self.drop = OptionMenu(master, self.clicked, *movieOptions) #Drop down menu options
+        self.drop.pack()
+        
+        # Rating label and entry box
+        self.ratingLabel = Label(master, text="Rating (1-5)", bg="dark red", font=("Helvetica", 15, "bold")) # Rating label, entry, packing
+        self.ratingEntry = Entry(master, font=("Helvetica, 10"))
+        self.ratingLabel.pack(pady=5)
+        self.ratingEntry.pack()
+        
+        # Review label and entry box
+        self.reviewLabel = Label(master, text="Review", bg="dark red", font=("Helvetica", 15, "bold")) # Review label, entry, packing
+        self.reviewEntry = Entry(master, font=("Helvetica, 10")) 
+        self.reviewLabel.pack(pady=5)
+        self.reviewEntry.pack()
+        
+        self.addButton = Button(master, text="Add Movie", command=self.movieEntries, bg= "#FFC107", width=15, font=("Helvetica", 10, "bold")) # Button to add movie data to a list 
+        self.addButton.pack(padx=20, pady=20)
+        
+        self.listButton = Button(master, text="Movie List", command=self.openWindow, bg= "#FFC107", width=15,font=("Helvetica", 10, "bold")) #, command=self.open) # Button to enter movie list window 
+        self.listButton.pack()
+        
+        # Adding image on first window
+        imgOne = Image.open("theaterDoor.jpg") # Adding the first window image
+        imgOneResize = imgOne.resize((200,125)) # Resizes the first window image 
+        firstImg = ImageTk.PhotoImage(imgOneResize) # Converts the resized image into PhotoImage 
+        imgOneLabel = Label(master, image=firstImg, text="Photo of doors to a movie theater") # Label to hold the image 
+        imgOneLabel.pack(pady=20, padx=10)
+        imgOneLabel.image = firstImg
+
+
+# Gets movie data from the entries
+    def movieEntries(self): 
+        title = self.movieEntry.get()
+        genre = self.clicked.get()
+        rating = self.ratingEntry.get()
+        review = self.reviewEntry.get()
+        
+        # Ensures entries are deleted when movie is added 
+        self.movieEntry.delete(0, END)
+        self.ratingEntry.delete(0, END)
+        self.reviewEntry.delete(0, END)
+
+    ''' Validation Explanation: I tested the title and rating to ensure movies are not added if title is empty or if rating is not between 1 and 5. Originally I could raise the error messages but the movies (or empty movies) would still get added. I had to fix that to ensure the movie was only added if both conditions are satisfied.'''
+        # Validates that title isn't empty 
+        if not title:
+            messagebox.showerror("Input Error", "Title cannot be empty.") # If empty shows error message
+            return 
+        try:
+            rating = int(rating) # Converts rating to integer 
+            if rating < 1 or rating > 5: # Validates that rating is number from 1-5
+                raise ValueError
+        except ValueError:
+            messagebox.showerror("Input Error", "Rating must be between 1 and 5.") # Error message if rating is not a number 1-5 
+            return
+
+        # Puts movies into a dictionary
+        movieDictionary = {
+            "title": title,
+            "genre": genre,
+            "rating": rating,
+            "review": review
+        }
+
+        # Adds movie dictionary to a list 
+        self.movieList.append(movieDictionary)
+
+        self.clicked.set("Action") # Sets genre button to "Action" as a placeholder 
+
+
+    def openWindow(self):
+        extraWindow = Toplevel(self.master)
+        extraWindow.title("Juna Movie List")
+        extraWindow.geometry("425x500")
+        SecondWindow(extraWindow, self.movieList)
+
+
+# Second window
+class SecondWindow:
+    def __init__(self, master, movieList):
+        self.master = master
+        self.movieList = movieList
+        master.configure(bg="dark red") # Adds background color 
+
+        self.secondPageLabel = Label(master, text="Movie List", bg="dark red", font=("Helvetica", 15, "bold") ) # Second window label
+        self.secondPageLabel.grid(padx=100, pady=20)
+
+        # Frame for movie info headers
+        movieInfoFrame = Frame(master)
+        movieInfoFrame.grid()
+        Label(movieInfoFrame, text="Title",  width=13, anchor="w", relief="sunken", bg= "#FFC107", font=("Helvetica", 8, "bold")).grid(row=2, column=0, padx=5)
+        Label(movieInfoFrame, text="Genre", width=13, anchor="w",relief="sunken", bg= "#FFC107",  font=("Helvetica", 8, "bold")).grid(row=2, column=1, padx=5)
+        Label(movieInfoFrame, text="Rating", width=13, anchor="w", relief="sunken", bg= "#FFC107",  font=("Helvetica", 8, "bold")).grid(row=2, column=2, padx=5)
+        Label(movieInfoFrame, text="Review", width=13, anchor="w", relief="sunken", bg= "#FFC107",  font=("Helvetica", 8, "bold")).grid(row=2, column=3, padx=5)
+
+        # Loop that goes through each movie to display as a list 
+        for movie in (self.movieList):
+            movieListFrame = Frame(master)
+            movieListFrame.grid()
+
+            # Displays each section with info of movie added 
+            Label(movieListFrame, text=movie["title"], width=13, anchor="w", relief="ridge").grid(row=3, column=0, padx=5)
+            Label(movieListFrame, text=movie["genre"], width=13, anchor="w", relief="ridge").grid(row=3, column=1, padx=5)
+            Label(movieListFrame, text=movie["rating"], width=13, anchor="w", relief="ridge").grid(row=3, column=2, padx=5)
+            Label(movieListFrame, text=movie["review"], width=13 , anchor="w", relief="ridge").grid(row=3, column=3, padx=5)
+        
+        # Button to return to first window
+        self.homeBtn = Button(master, text="Back to Home Page", command=self.homeReturn, bg= "#FFC107", font=("Helvetica", 10, "bold")) 
+        self.homeBtn.grid(pady=20) 
+
+        imgTwo = Image.open("popcorn.jpg") # Adding the second window image
+        imgTwoResize = imgTwo.resize((250,150)) # Resizes the second window image 
+        secondImg = ImageTk.PhotoImage(imgTwoResize) # Converts the resized image into PhotoImage 
+        imgTwoLabel = Label(master, image=secondImg, text="Photo of popcorn") # Label to hold the image 
+        imgTwoLabel.grid(pady=100, padx=50)
+        imgTwoLabel.image = secondImg
+
+# Function that enables the return to home button to work 
+    def homeReturn(self): 
+        self.master.destroy() # removes second window from view 
+
+
+
+window = Window(root)
+root.mainloop()
